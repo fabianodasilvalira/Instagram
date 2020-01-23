@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Configura toolbar
         Toolbar toolbar = findViewById(R.id.toolbarPrincipal);
-        toolbar.setTitle("Instagram");
+        toolbar.setTitle("Sucogram");
         setSupportActionBar( toolbar );
 
         //configuracoes de objetos

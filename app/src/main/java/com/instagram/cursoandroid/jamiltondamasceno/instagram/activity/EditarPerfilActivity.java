@@ -1,11 +1,13 @@
 package com.instagram.cursoandroid.jamiltondamasceno.instagram.activity;
 
+import android.Manifest;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -22,6 +24,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.instagram.cursoandroid.jamiltondamasceno.instagram.R;
 import com.instagram.cursoandroid.jamiltondamasceno.instagram.helper.ConfiguracaoFirebase;
+import com.instagram.cursoandroid.jamiltondamasceno.instagram.helper.Permissao;
 import com.instagram.cursoandroid.jamiltondamasceno.instagram.helper.UsuarioFirebase;
 import com.instagram.cursoandroid.jamiltondamasceno.instagram.model.Usuario;
 
@@ -39,24 +42,30 @@ public class EditarPerfilActivity extends AppCompatActivity {
     private static final int SELECAO_GALERIA = 200;
     private StorageReference storageRef;
     private String identificadorUsuario;
+    private AlertDialog dialog;
 
+    private String[] permissoesNecessarias = new String[]{
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editar_perfil);
 
-        //configuracoes inicias
+        //Validar permissões
+        Permissao.validarPermissoes(permissoesNecessarias, this, 1);
+
+
+        //Configurações iniciais
         usuarioLogado = UsuarioFirebase.getDadosUsuarioLogado();
         storageRef = ConfiguracaoFirebase.getFirebaseStorage();
         identificadorUsuario = UsuarioFirebase.getIdentificadorUsuario();
 
-
-
         //Configura toolbar
         Toolbar toolbar = findViewById(R.id.toolbarPrincipal);
         toolbar.setTitle("Editar perfil");
-        setSupportActionBar( toolbar );
+        setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close_black_24dp);
@@ -64,86 +73,90 @@ public class EditarPerfilActivity extends AppCompatActivity {
         //inicializar componentes
         inicializarComponentes();
 
-        //recuperar dados do usuario
+        //Recuperar dados do usuário
         FirebaseUser usuarioPerfil = UsuarioFirebase.getUsuarioAtual();
         editNomePerfil.setText(usuarioPerfil.getDisplayName().toUpperCase());
         editEmailPerfil.setText(usuarioPerfil.getEmail());
 
         Uri url = usuarioPerfil.getPhotoUrl();
-        if( url != null  ){
+        if (url != null) {
             Glide.with(EditarPerfilActivity.this)
                     .load(url)
                     .into(imageEditarPerfil);
-
-        }else{
+        } else {
             imageEditarPerfil.setImageResource(R.drawable.avatar);
         }
 
-        //salvar alteracoes do nome
+        //Salvar alterações do nome
         buttonSalvarAlteracoes.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
+
                 String nomeAtualizado = editNomePerfil.getText().toString();
 
                 //atualizar nome no perfil
                 UsuarioFirebase.atualizarNomeUsuario(nomeAtualizado);
 
-                //atualizar nome no banco de dados
-                usuarioLogado.setNome( nomeAtualizado );
+                //Atualizar nome no banco de dados
+                usuarioLogado.setNome(nomeAtualizado);
                 usuarioLogado.atualizar();
 
                 Toast.makeText(EditarPerfilActivity.this,
-                        "Dados alterados com sucesso",
+                        "Dados alterados com sucesso!",
                         Toast.LENGTH_SHORT).show();
+                finish();
+
             }
         });
 
-        //alterar foto do usuario
+        //Alterar foto do usuário
         textAlterarFoto.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                if(i.resolveActivity(getPackageManager()) != null){
+                if (i.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(i, SELECAO_GALERIA);
                 }
             }
         });
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(resultCode == RESULT_OK){
+        if (resultCode == RESULT_OK) {
             Bitmap imagem = null;
 
-            try{
-                //selecao apenas da galeria
-                switch( requestCode ){
-                    case SELECAO_GALERIA:
+            try {
 
-                        Uri localImagemSeleconada = data.getData();
-                        imagem = MediaStore.Images.Media.getBitmap(getContentResolver(), localImagemSeleconada);
+                //Selecao apenas da galeria
+                switch (requestCode) {
+                    case SELECAO_GALERIA:
+                        Uri localImagemSelecionada = data.getData();
+                        imagem = MediaStore.Images.Media.getBitmap(getContentResolver(), localImagemSelecionada);
                         break;
                 }
-                // caso tenha sido escolhido uma imagem
-                if( imagem != null ){
-                    //configura imagem na tela
+
+                //Caso tenha sido escolhido uma imagem
+                if (imagem != null) {
+                    abrirDialogCarregamento("Carregando foto, aguarde!");
+                    //Configura imagem na tela
                     imageEditarPerfil.setImageBitmap(imagem);
 
-                    //recuperar dados da imagem parao firebase
+                    //Recuperar dados da imagem para o firebase
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     imagem.compress(Bitmap.CompressFormat.JPEG, 70, baos);
                     byte[] dadosImagem = baos.toByteArray();
 
-
-                    // salvar imagem no firebase
+                    //Salvar imagem no firebase
                     StorageReference imagemRef = storageRef
                             .child("imagens")
                             .child("perfil")
-                            .child( identificadorUsuario +".jpeg");
+                            .child(identificadorUsuario + ".jpeg");
 
-                    UploadTask uploadTask = imagemRef.putBytes( dadosImagem );
+                    UploadTask uploadTask = imagemRef.putBytes(dadosImagem);
                     uploadTask.addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
@@ -155,10 +168,11 @@ public class EditarPerfilActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                            // recuperar local da foto
-
+                            //Recuperar local da foto
                             Uri url = taskSnapshot.getDownloadUrl();
                             atualizarFotoUsuario(url);
+
+                            dialog.cancel();
 
                             Toast.makeText(EditarPerfilActivity.this,
                                     "Sucesso ao fazer upload da imagem",
@@ -169,29 +183,47 @@ public class EditarPerfilActivity extends AppCompatActivity {
 
                 }
 
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+
         }
+
     }
 
-    public void atualizarFotoUsuario(Uri url){
-        //atualizarr foto no perfil
+    private void abrirDialogCarregamento(String titulo) {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(titulo);
+        alert.setCancelable(false);
+        alert.setView(R.layout.carregamento);
+
+        dialog = alert.create();
+        dialog.show();
+
+    }
+
+    private void atualizarFotoUsuario(Uri url) {
+
+        //Atualizar foto no perfil
         UsuarioFirebase.atualizarFotoUsuario(url);
 
-        // atualizar foto no firebase
+        //Atualizar foto no Firebase
         usuarioLogado.setCaminhoFoto(url.toString());
         usuarioLogado.atualizar();
+
         Toast.makeText(EditarPerfilActivity.this,
-                "Sua foto foi atualizada",
+                "Sua foto foi atualizada!",
                 Toast.LENGTH_SHORT).show();
+
     }
 
-    public void inicializarComponentes(){
-        imageEditarPerfil      = findViewById(R.id.imageEditarPerfil);
-        textAlterarFoto        = findViewById(R.id.textAlterarfoto);
-        editNomePerfil         = findViewById(R.id.editNomePerfil);
-        editEmailPerfil        = findViewById(R.id.editEmailPerfil);
+    public void inicializarComponentes() {
+
+        imageEditarPerfil = findViewById(R.id.imageEditarPerfil);
+        textAlterarFoto = findViewById(R.id.textAlterarfoto);
+        editNomePerfil = findViewById(R.id.editNomePerfil);
+        editEmailPerfil = findViewById(R.id.editEmailPerfil);
         buttonSalvarAlteracoes = findViewById(R.id.buttonSalvarAlteracoes);
         editEmailPerfil.setFocusable(false);
 
@@ -199,7 +231,9 @@ public class EditarPerfilActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
+
         finish();
         return false;
+
     }
 }

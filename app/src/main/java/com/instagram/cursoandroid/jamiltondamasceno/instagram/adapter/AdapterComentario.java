@@ -1,0 +1,68 @@
+package com.instagram.cursoandroid.jamiltondamasceno.instagram.adapter;
+
+import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.instagram.cursoandroid.jamiltondamasceno.instagram.R;
+import com.instagram.cursoandroid.jamiltondamasceno.instagram.model.Comentario;
+
+import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+public class AdapterComentario extends RecyclerView.Adapter<AdapterComentario.MyViewHolder> {
+
+    private List<Comentario> listaComentario;
+    private Context context;
+
+    public AdapterComentario(List<Comentario> listaComentario, Context context) {
+        this.listaComentario = listaComentario;
+        this.context = context;
+    }
+
+    @Override
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemLista = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_comentario, parent, false);
+        return new AdapterComentario.MyViewHolder(itemLista);
+    }
+
+
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        Comentario comentario = listaComentario.get(position);
+
+        holder.nomeUsuario.setText(comentario.getNomeUsuario());
+        holder.comentario.setText(comentario.getComentario());
+        Glide.with(context).load(comentario.getCaminhoFoto()).into(holder.imagemPerfil);
+
+
+
+    }
+
+    @Override
+    public int getItemCount() {
+        return listaComentario.size();
+    }
+
+    public class MyViewHolder extends RecyclerView.ViewHolder{
+
+        CircleImageView imagemPerfil;
+        TextView nomeUsuario, comentario;
+
+        public MyViewHolder(View itemView){
+            super(itemView);
+
+            imagemPerfil = itemView.findViewById(R.id.imageFotoComentario);
+            nomeUsuario = itemView.findViewById(R.id.textNomeComentario);
+            comentario = itemView.findViewById(R.id.textComentario);
+
+        }
+    }
+
+}

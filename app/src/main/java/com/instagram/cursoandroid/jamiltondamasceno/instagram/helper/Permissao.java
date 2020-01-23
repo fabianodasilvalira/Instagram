@@ -1,4 +1,4 @@
-package com.instagramfontes.cursoandroid.jamiltondamasceno.instagramfontes.helper;
+package com.instagram.cursoandroid.jamiltondamasceno.instagram.helper;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;

@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -30,8 +29,8 @@ public class AdapterPesquisa extends RecyclerView.Adapter<AdapterPesquisa.MyView
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemLista = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_pesquisa_usuario, parent, false );
 
+        View itemLista = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_pesquisa_usuario, parent, false );
         return new MyViewHolder(itemLista);
     }
 
@@ -64,7 +63,7 @@ public class AdapterPesquisa extends RecyclerView.Adapter<AdapterPesquisa.MyView
         public MyViewHolder(View itemView) {
             super(itemView);
 
-            foto = itemView.findViewById(R.id.imageFotoPesquisa);
+            foto = itemView.findViewById(R.id.imageFotoComentario);
             nome = itemView.findViewById(R.id.textNomePesquisa);
 
         }

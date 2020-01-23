@@ -43,6 +43,15 @@ dependencies {
     //Dependências circle image view
     implementation 'de.hdodenhof:circleimageview:2.2.0'
 
+    // AndroidPhotoFilter
+    implementation 'info.androidhive:imagefilters:1.0.7'
+
+    // carregar imagem
+    implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+
+    // Dependencia like button
+    implementation 'com.github.jd-alexander:LikeButton:0.2.3'
+
 
 }
 

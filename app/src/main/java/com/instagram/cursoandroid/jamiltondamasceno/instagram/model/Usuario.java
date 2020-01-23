@@ -34,14 +34,27 @@ public class Usuario implements Serializable {
                 .child(getId());
         usuariosRef.setValue(this);
     }
-
-    public void atualizar(){
+    public void atualizarQtdPostagem(){
         DatabaseReference firebaseRef = ConfiguracaoFirebase.getFirebase();
         DatabaseReference usuarioRef = firebaseRef
                 .child("usuarios")
                 .child(getId());
-        Map<String, Object> valoresUsuario = converterParaMap();
-        usuarioRef.updateChildren(valoresUsuario);
+
+        HashMap<String, Object>usuarioMap = new HashMap<>();
+
+        Map<String, Object> dados = converterParaMap();
+        dados.put("postagens", getPostagens());
+
+        usuarioRef.updateChildren(dados);
+    }
+    public void atualizar(){
+        DatabaseReference firebaseRef = ConfiguracaoFirebase.getFirebase();
+
+        Map objeto = new HashMap();
+        objeto.put("/usuarios/" + getId() + "/nome", getNome());
+        objeto.put("/usuarios/" + getId() + "/caminhoFoto", getCaminhoFoto());
+
+        firebaseRef.updateChildren(objeto);
     }
 
     public Map<String, Object> converterParaMap(){
